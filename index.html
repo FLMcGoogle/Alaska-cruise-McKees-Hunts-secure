@@ -1,0 +1,590 @@
+<!doctype html>
+<!-- Passport rollback: last complete version before itinerary sharing/export -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2540">
+  <title>Passport · Private Charter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --navy:#0b2540;
+      --teal:#0f7880;
+      --paper:#fbf4e6;
+      --cream:#fffaf0;
+      --amber:#c98b28;
+      --ink:#15283d;
+      --muted:#6c7f8d;
+      --line:#d8c6a7;
+      font-family:Inter,system-ui,sans-serif;
+    }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    html, body { min-height:100%; margin:0; }
+    body {
+      min-height:100svh;
+      color:var(--ink);
+      background:
+        linear-gradient(rgba(251,244,230,.84),rgba(251,244,230,.92)),
+        url("assets/antique-travel-map-v1.jpg") center/cover fixed;
+    }
+    button, input { font:inherit; }
+    .page {
+      min-height:100svh;
+      display:grid;
+      place-items:center;
+      padding:max(22px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));
+    }
+    .passport {
+      width:min(100%,460px);
+      padding:28px 25px 25px;
+      border:1px solid rgba(11,37,64,.22);
+      border-radius:30px;
+      background:rgba(255,250,240,.94);
+      box-shadow:0 24px 80px rgba(39,28,12,.20);
+      position:relative;
+      overflow:hidden;
+    }
+    .passport::before {
+      content:"";
+      position:absolute;
+      inset:11px;
+      border:1px solid rgba(201,139,40,.38);
+      border-radius:23px;
+      pointer-events:none;
+    }
+    .kicker {
+      color:var(--teal);
+      font:700 12px/1.2 "Space Mono",monospace;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    h1 {
+      margin:10px 0 4px;
+      color:var(--navy);
+      font:800 clamp(39px,12vw,58px)/.95 "Bricolage Grotesque",sans-serif;
+      letter-spacing:-.045em;
+    }
+    .tagline {
+      margin:0 0 25px;
+      color:#765e39;
+      font:600 16px/1.4 "Space Mono",monospace;
+    }
+    .seal {
+      width:112px;
+      aspect-ratio:1;
+      margin:4px auto 22px;
+      border:2px solid rgba(15,120,128,.45);
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 48% 44%,rgba(255,255,255,.03) 0 48%,rgba(11,37,64,.10) 49% 51%,transparent 52%),
+        url("assets/sepia-globe-v1.png") center/cover;
+      box-shadow:inset 0 0 0 7px rgba(255,250,240,.45),0 8px 22px rgba(11,37,64,.16);
+    }
+    .intro {
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.55;
+      text-align:center;
+    }
+    .form { display:grid; gap:12px; }
+    label {
+      color:var(--navy);
+      font:700 12px/1.2 "Space Mono",monospace;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
+    input {
+      width:100%;
+      min-height:52px;
+      padding:0 16px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      color:var(--ink);
+      background:#fff;
+      font-size:16px;
+      outline:none;
+    }
+    input:focus { border-color:var(--teal); box-shadow:0 0 0 4px rgba(15,120,128,.13); }
+    .primary, .secondary {
+      min-height:52px;
+      border:0;
+      border-radius:999px;
+      padding:0 19px;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .primary { color:#fff; background:var(--navy); }
+    .primary:hover { background:#123b62; }
+    .primary:disabled { opacity:.55; cursor:wait; }
+    .secondary { color:var(--navy); background:#e7f1ef; }
+    .message {
+      min-height:22px;
+      margin:13px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+      text-align:center;
+    }
+    .message.error { color:#9b2f32; }
+    .message.success { color:#147047; }
+    .fine {
+      margin:18px 0 0;
+      color:#8b7a60;
+      font-size:12px;
+      line-height:1.45;
+      text-align:center;
+    }
+    .loading {
+      display:none;
+      text-align:center;
+      padding:28px 4px 8px;
+    }
+    .loading[aria-hidden="false"] { display:block; }
+    .spinner {
+      width:38px;
+      height:38px;
+      margin:0 auto 14px;
+      border:3px solid #d6e5e2;
+      border-top-color:var(--teal);
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .setup {
+      display:none;
+      margin-top:18px;
+      padding:14px;
+      border:1px dashed var(--amber);
+      border-radius:14px;
+      background:#fff8e8;
+      color:#715223;
+      font-size:13px;
+      line-height:1.45;
+    }
+    .setup.show { display:block; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="passport" aria-labelledby="page-title">
+      <div class="kicker">Private passage · authorized travelers</div>
+      <h1 id="page-title">Passport</h1>
+      <p class="tagline">Plan the journey, cherish the memories.</p>
+      <div class="seal" aria-hidden="true"></div>
+
+      <div id="signin-panel">
+        <p class="intro">Enter an approved email address. We’ll email you a secure verification code—no password or link required.</p>
+        <form class="form" id="signin-form">
+          <label for="email">Traveler email</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+          <button class="primary" id="signin-button" type="submit">Email my secure code</button>
+        </form>
+
+        <form class="form" id="code-form" hidden>
+          <p class="intro" id="code-instructions"></p>
+          <label for="code">Verification code</label>
+          <input id="code" name="code" type="text" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,8}" maxlength="8" placeholder="00000000" required>
+          <button class="primary" id="code-button" type="submit">Open my private itinerary</button>
+          <button class="secondary" id="different-email" type="button">Use a different email</button>
+        </form>
+        <p class="message" id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="loading" id="loading" aria-hidden="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <strong>Opening your private itinerary…</strong>
+        <p class="message">Verifying access and retrieving the latest Charter.</p>
+      </div>
+
+      <div class="setup" id="setup-note">
+        This secure page is ready, but it still needs the Supabase Project URL and publishable key. Follow the included setup guide, then replace the two placeholders near the bottom of this file.
+      </div>
+      <p class="fine">The itinerary itself is not stored in this public page. It is retrieved from private storage only after authorization.</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    /* These two values are intended to be public. Never put a service_role key here. */
+    const SUPABASE_URL = "https://brwtodgqzrellitoipxq.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0W7jfrOqqhWu1jqh79K5Cg_BYrm6b-F";
+    const PRIVATE_BUCKET = "passages-private";
+    const PRIVATE_APP_FILE = "app/passport-2026-07-30-v6.html";
+
+    const configured =
+      /^https:\/\/.+\.supabase\.co$/i.test(SUPABASE_URL) &&
+      !SUPABASE_PUBLISHABLE_KEY.startsWith("PASTE_");
+
+    const form = document.getElementById("signin-form");
+    const button = document.getElementById("signin-button");
+    const codeForm = document.getElementById("code-form");
+    const codeButton = document.getElementById("code-button");
+    const differentEmailButton = document.getElementById("different-email");
+    const codeInstructions = document.getElementById("code-instructions");
+    const message = document.getElementById("message");
+    const signinPanel = document.getElementById("signin-panel");
+    const loading = document.getElementById("loading");
+    const setupNote = document.getElementById("setup-note");
+    const PENDING_EMAIL_KEY = "passages_pending_email";
+    let client = null;
+    let pendingEmail = sessionStorage.getItem(PENDING_EMAIL_KEY) || "";
+
+    function showMessage(text, kind) {
+      message.textContent = text || "";
+      message.className = "message" + (kind ? " " + kind : "");
+    }
+
+    function showLoading(show) {
+      signinPanel.hidden = show;
+      loading.setAttribute("aria-hidden", show ? "false" : "true");
+    }
+
+    function showCodeForm(email) {
+      pendingEmail = String(email || "").trim().toLowerCase();
+      if (!pendingEmail) return;
+      sessionStorage.setItem(PENDING_EMAIL_KEY, pendingEmail);
+      form.hidden = true;
+      codeForm.hidden = false;
+      codeInstructions.textContent = "Enter the code sent to " + pendingEmail + ". Keep this Home Screen app open while you check your email.";
+      document.getElementById("code").focus();
+    }
+
+    function showEmailForm() {
+      pendingEmail = "";
+      sessionStorage.removeItem(PENDING_EMAIL_KEY);
+      codeForm.hidden = true;
+      form.hidden = false;
+      document.getElementById("code").value = "";
+      showMessage("");
+      document.getElementById("email").focus();
+    }
+
+    function addSecureSessionControls(html, email) {
+      const safeEmail = String(email || "Approved traveler").replace(/[&<>"']/g, "");
+      const cloudBoot = `
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
+        <script>
+          window.PASSAGES_CLOUD = {
+            url: ${JSON.stringify(SUPABASE_URL)},
+            key: ${JSON.stringify(SUPABASE_PUBLISHABLE_KEY)},
+            bucket: ${JSON.stringify(PRIVATE_BUCKET)}
+          };
+          window.PASSAGES_USER_EMAIL = ${JSON.stringify(String(email || "").trim().toLowerCase())};
+          window.PASSAGES_IS_OWNER = window.PASSAGES_USER_EMAIL === "doug1mckee@gmail.com";
+        <\/script>`;
+      const control = `
+        <style>
+          #passages-secure-session{position:relative;z-index:auto;width:max-content;display:flex;align-items:center;gap:8px;margin:22px max(12px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) auto;padding:7px 8px 7px 12px;border:1px solid rgba(15,120,128,.28);border-radius:999px;background:rgba(255,250,240,.94);box-shadow:0 7px 24px rgba(11,37,64,.18);font:600 11px/1.2 Inter,system-ui,sans-serif;color:#47616c;backdrop-filter:blur(8px)}
+          #passages-secure-session[hidden]{display:none!important}
+          #passages-secure-session button{border:0;border-radius:999px;padding:8px 11px;background:#0b2540;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;cursor:pointer}
+          @media(max-width:520px){
+            #passages-secure-session span{display:none}
+          }
+        </style>
+        <div id="passages-secure-session" aria-label="Private session controls">
+          <span>Private · ${safeEmail}</span>
+          <button type="button" onclick="window.passagesSecureSignOut()">Sign out</button>
+        </div>
+        <script>
+          window.passagesSecureSignOut = function(){
+            Object.keys(localStorage).forEach(function(key){
+              if(key.indexOf("sb-") === 0 && key.indexOf("-auth-token") > -1) localStorage.removeItem(key);
+            });
+            if(window.parent && window.parent !== window){
+              window.parent.location.replace(window.parent.location.pathname);
+            }else{
+              location.replace(location.pathname);
+            }
+          };
+          window.passagesPlaceSecureSession = function(){
+            var control = document.getElementById("passages-secure-session");
+            if(!control) return;
+            var openScreen = document.querySelector(".screen-panel.screen-open");
+            var passagesEntry = document.getElementById("passages-entry");
+            var tripApp = document.getElementById("trip-app");
+            var passagesIsOpen = passagesEntry && !passagesEntry.classList.contains("is-hidden");
+            var privateTripIsOpen = document.body.classList.contains("passages-trip-open");
+            var showOnAlaskaHome = !!tripApp && !passagesIsOpen && !privateTripIsOpen && !openScreen;
+            control.hidden = !showOnAlaskaHome;
+            if(showOnAlaskaHome && control.parentNode !== tripApp) tripApp.appendChild(control);
+          };
+          window.passagesPlaceSecureSession();
+          new MutationObserver(function(){
+            window.requestAnimationFrame(window.passagesPlaceSecureSession);
+          }).observe(document.body,{subtree:true,attributes:true,attributeFilter:["class","hidden"]});
+          var passagesSessionMedia = window.matchMedia("(max-width:520px)");
+          if(passagesSessionMedia.addEventListener){
+            passagesSessionMedia.addEventListener("change",window.passagesPlaceSecureSession);
+          }
+        <\/script>`;
+      return html
+        .replace(/<head>/i, "<head>" + cloudBoot)
+        .replace(/<\/body>/i, control + "</body>");
+    }
+
+    /*
+     * Safety net for mobile browsers: the private document is large and can
+     * finish painting before its navigation IIFE has attached listeners.
+     * These handlers only cover the Passport entry buttons and deliberately
+     * use the page's existing data attributes, so they do not change content
+     * or styling and are harmless when the normal handlers are present.
+     */
+    function addPassportButtonRescue(html) {
+      const rescue = `<script>
+        (function(){
+          function wire(){
+            var entry=document.getElementById("passages-entry");
+            var tripApp=document.getElementById("trip-app");
+            if(!entry) return;
+            function showPage(name){
+              entry.classList.remove("is-hidden");
+              entry.setAttribute("data-passages-view",name);
+              entry.querySelectorAll("[data-passages-page]").forEach(function(page){
+                page.hidden=page.getAttribute("data-passages-page")!==name;
+              });
+              if(tripApp) tripApp.setAttribute("aria-hidden","true");
+              document.body.classList.add("passages-entry-open");
+              entry.scrollTop=0;
+            }
+            function enterTrip(){
+              entry.classList.add("is-hidden");
+              if(tripApp) tripApp.setAttribute("aria-hidden","false");
+              document.body.classList.remove("passages-entry-open");
+              window.scrollTo(0,0);
+            }
+            entry.querySelectorAll("[data-passages-open]").forEach(function(button){
+              if(button.getAttribute("data-passages-rescue")==="open") return;
+              button.setAttribute("data-passages-rescue","open");
+              button.addEventListener("click",function(){showPage(button.getAttribute("data-passages-open"));});
+            });
+            entry.querySelectorAll("[data-passages-enter-trip]").forEach(function(button){
+              if(button.getAttribute("data-passages-rescue")==="trip") return;
+              button.setAttribute("data-passages-rescue","trip");
+              button.addEventListener("click",enterTrip);
+            });
+            entry.querySelectorAll("[data-passages-enter-birmingham]").forEach(function(button){
+              if(button.getAttribute("data-passages-rescue")==="birmingham") return;
+              button.setAttribute("data-passages-rescue","birmingham");
+              button.addEventListener("click",function(){
+                if(typeof window.openBirmingham==="function") window.openBirmingham();
+              });
+            });
+            /* If the large app script did not bind, preserve the native-app
+               handoff here too.  Only links explicitly labelled as an app
+               are touched; ordinary website links remain ordinary links. */
+            var apps={
+              avis:{scheme:"avis://",ios:"https://apps.apple.com/us/app/avis-car-rental/id308342527",android:"https://play.google.com/store/apps/details?id=com.avis.androidapp"},
+              united:{scheme:"united://",ios:"https://apps.apple.com/us/app/united-airlines/id449945214",android:"https://play.google.com/store/apps/details?id=com.united.mobile.android"},
+              southwest:{scheme:"southwest://",ios:"https://apps.apple.com/us/app/southwest-airlines/id344542975",android:"https://play.google.com/store/apps/details?id=com.southwestairlines"},
+              marriott:{scheme:"marriott://",ios:"https://apps.apple.com/us/app/marriott-bonvoy/id455004730",android:"https://play.google.com/store/apps/details?id=com.marriott.mrt"},
+              ncl:{scheme:"ncl://",ios:"https://apps.apple.com/us/app/norwegian-cruise-line/id6510931792",android:"https://play.google.com/store/apps/details?id=com.nclh.ncl_mobile"}
+            };
+            function appKey(link){
+              var text=String(link.textContent||"").replace(/\s+/g," ").trim().toLowerCase();
+              var href=String(link.getAttribute("href")||"").toLowerCase();
+              if(text.indexOf("avis app")>-1||href.indexOf("avis://")===0) return "avis";
+              if(text.indexOf("united app")>-1||href.indexOf("united://")===0) return "united";
+              if(text.indexOf("southwest app")>-1||href.indexOf("southwest://")===0) return "southwest";
+              if(text.indexOf("marriott app")>-1||href.indexOf("marriott://")===0) return "marriott";
+              if(text.indexOf("ncl app")>-1||href.indexOf("ncl://")===0) return "ncl";
+              return "";
+            }
+            function appPlatform(){
+              var ua=navigator.userAgent||"";
+              if(/android/i.test(ua)) return "android";
+              if(/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&navigator.maxTouchPoints>1)) return "ios";
+              return "";
+            }
+            function launchApp(config,platform){
+              var target=window.top&&window.top!==window?window.top:window;
+              var fallback=config[platform], timer=setTimeout(function(){
+                if(!document.hidden&&fallback) target.location.assign(fallback);
+              },1300);
+              document.addEventListener("visibilitychange",function(){if(document.hidden) clearTimeout(timer);},{once:true});
+              target.location.assign(config.scheme);
+            }
+            if(!document.documentElement.getAttribute("data-passages-app-rescue")){
+              document.documentElement.setAttribute("data-passages-app-rescue","true");
+              document.addEventListener("click",function(event){
+                var link=event.target.closest&&event.target.closest("a[href]");
+                var key=link&&appKey(link), platform=appPlatform();
+                if(!key||!platform) return;
+                event.preventDefault();
+                event.stopPropagation();
+                launchApp(apps[key],platform);
+              },true);
+            }
+          }
+          if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",wire,{once:true});
+          else wire();
+          window.addEventListener("load",wire,{once:true});
+        })();
+      <\/script>`;
+      return html.replace(/<\/body>/i, rescue + "</body>");
+    }
+
+    let privateAppObjectUrl = "";
+
+    async function mountPrivateApp(html) {
+      /*
+       * Do not replace this authenticated shell with document.write().
+       * Mobile Safari can display a large asynchronously-written document
+       * without reliably running its scripts, leaving every app button inert.
+       *
+       * A same-origin Blob document in a full-screen iframe executes as a
+       * normal page while the authenticated parent remains alive.  The child
+       * can still use the existing Supabase session and its sign-out control
+       * can safely return the parent to this GitHub Pages URL.
+       */
+      if (privateAppObjectUrl) URL.revokeObjectURL(privateAppObjectUrl);
+      privateAppObjectUrl = URL.createObjectURL(
+        new Blob([html], { type: "text/html;charset=utf-8" })
+      );
+
+      const frame = document.createElement("iframe");
+      frame.id = "passages-private-app";
+      frame.title = "Passport private itinerary";
+      frame.src = privateAppObjectUrl;
+      frame.setAttribute("allow", "clipboard-read; clipboard-write");
+      frame.style.cssText =
+        "position:fixed;inset:0;width:100%;height:100%;height:100dvh;" +
+        "border:0;background:#fff;display:block;z-index:2147483647;";
+
+      document.documentElement.style.cssText =
+        "margin:0;width:100%;height:100%;overflow:hidden;background:#fff;";
+      document.body.replaceChildren(frame);
+      document.body.style.cssText =
+        "margin:0;width:100%;height:100%;overflow:hidden;background:#fff;";
+    }
+
+    async function openPrivateApp(session) {
+      showLoading(true);
+      const result = await client.storage
+        .from(PRIVATE_BUCKET)
+        .createSignedUrl(PRIVATE_APP_FILE, 300);
+
+      if (result.error || !result.data || !result.data.signedUrl) {
+        showLoading(false);
+        showMessage("This email is signed in but is not approved for this trip. Ask the trip owner to add it.", "error");
+        return;
+      }
+
+      const freshAppUrl = new URL(result.data.signedUrl);
+      freshAppUrl.searchParams.set("passages-fresh", String(Date.now()));
+      const response = await fetch(freshAppUrl.toString(), { cache: "no-store" });
+      if (!response.ok) throw new Error("The private itinerary could not be downloaded.");
+      let privateHtml = await response.text();
+
+      /* Keep the app-launch repair in this small public loader as well.  That
+         means replacing this one GitHub file is enough; the Supabase HTML
+         object does not have to be re-uploaded for the fix to take effect. */
+      privateHtml = privateHtml
+        .split("window.location.assign(config.scheme)")
+        .join("((window.top&&window.top!==window)?window.top:window).location.assign(config.scheme)")
+        .split("window.location.assign(fallback)")
+        .join("((window.top&&window.top!==window)?window.top:window).location.assign(fallback)");
+
+      /* Replace every private asset path with a time-limited Supabase URL
+         before the itinerary is written into the page. */
+      const assetPaths = Array.from(new Set(
+        privateHtml.match(/assets\/[A-Za-z0-9][A-Za-z0-9._/-]*/g) || []
+      ));
+      const signedAssets = await Promise.all(assetPaths.map(async function(path) {
+        const signed = await client.storage
+          .from(PRIVATE_BUCKET)
+          .createSignedUrl("app/" + path, 43200);
+        if (signed.error || !signed.data || !signed.data.signedUrl) {
+          throw new Error("A private itinerary asset could not be authorized.");
+        }
+        return [path, signed.data.signedUrl];
+      }));
+      signedAssets.forEach(function(item) {
+        privateHtml = privateHtml.split(item[0]).join(item[1]);
+      });
+
+      privateHtml = addSecureSessionControls(privateHtml, session.user && session.user.email);
+      privateHtml = addPassportButtonRescue(privateHtml);
+      await mountPrivateApp(privateHtml);
+    }
+
+    async function checkSession() {
+      if (!configured) {
+        setupNote.classList.add("show");
+        button.disabled = true;
+        return;
+      }
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const result = await client.auth.getSession();
+      if (result.error) throw result.error;
+      if (result.data && result.data.session) {
+        sessionStorage.removeItem(PENDING_EMAIL_KEY);
+        await openPrivateApp(result.data.session);
+      } else if (pendingEmail) {
+        showCodeForm(pendingEmail);
+      }
+    }
+
+    form.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      if (!client) return;
+      button.disabled = true;
+      showMessage("Sending your secure code…");
+      try {
+        const email = document.getElementById("email").value.trim().toLowerCase();
+        const result = await client.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: true }
+        });
+        if (result.error) throw result.error;
+        showCodeForm(email);
+        showMessage("Code sent. Check your email, then return here and enter the complete code.", "success");
+      } catch (error) {
+        showMessage(error.message || "The secure code could not be sent.", "error");
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    codeForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      if (!client || !pendingEmail) return;
+      const token = document.getElementById("code").value.replace(/\D/g, "");
+      if (token.length < 6 || token.length > 8) {
+        showMessage("Enter the complete verification code from your email.", "error");
+        return;
+      }
+      codeButton.disabled = true;
+      showMessage("Verifying your secure code…");
+      try {
+        const result = await client.auth.verifyOtp({
+          email: pendingEmail,
+          token,
+          type: "email"
+        });
+        if (result.error) throw result.error;
+        if (!result.data || !result.data.session) throw new Error("The code could not create a secure session.");
+        sessionStorage.removeItem(PENDING_EMAIL_KEY);
+        await openPrivateApp(result.data.session);
+      } catch (error) {
+        showLoading(false);
+        showMessage(error.message || "That code is invalid or has expired.", "error");
+      } finally {
+        codeButton.disabled = false;
+      }
+    });
+
+    differentEmailButton.addEventListener("click", showEmailForm);
+
+    checkSession().catch(function(error) {
+      showLoading(false);
+      showMessage(error.message || "Passport could not verify this session.", "error");
+    });
+  </script>
+</body>
+</html>
