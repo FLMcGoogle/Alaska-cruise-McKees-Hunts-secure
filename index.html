@@ -267,10 +267,6 @@
 
     function addSecureSessionControls(html, email) {
       const safeEmail = String(email || "Approved traveler").replace(/[&<>"']/g, "");
-      const isOwner = String(email || "").trim().toLowerCase() === "doug1mckee@gmail.com";
-      const birminghamTrip = isOwner
-        ? '<a href="https://birmingham-trip-2026.mckeed.chatgpt.site" target="_blank" rel="noopener">Birmingham 2026</a>'
-        : '';
       const cloudBoot = `
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
         <script>
@@ -286,44 +282,16 @@
         <style>
           #passages-secure-session{position:relative;z-index:auto;width:max-content;display:flex;align-items:center;gap:8px;margin:22px max(12px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) auto;padding:7px 8px 7px 12px;border:1px solid rgba(15,120,128,.28);border-radius:999px;background:rgba(255,250,240,.94);box-shadow:0 7px 24px rgba(11,37,64,.18);font:600 11px/1.2 Inter,system-ui,sans-serif;color:#47616c;backdrop-filter:blur(8px)}
           #passages-secure-session[hidden]{display:none!important}
-          #passages-secure-session button,#passages-secure-session a{border:0;border-radius:999px;padding:8px 11px;background:#0b2540;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+          #passages-secure-session button{border:0;border-radius:999px;padding:8px 11px;background:#0b2540;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;cursor:pointer}
           @media(max-width:520px){
             #passages-secure-session span{display:none}
           }
         </style>
         <div id="passages-secure-session" aria-label="Private session controls">
           <span>Private · ${safeEmail}</span>
-          ${birminghamTrip}
           <button type="button" onclick="window.passagesSecureSignOut()">Sign out</button>
         </div>
         <script>
-          (function(){
-            var birmingham2026Url = "https://birmingham-trip-2026.mckeed.chatgpt.site";
-            function addBirmingham2026Trip(){
-              if(window.PASSAGES_USER_EMAIL !== "doug1mckee@gmail.com") return;
-              if(document.getElementById("passages-birmingham-2026-ticket")) return;
-              var previousTrip = document.getElementById("passages-birmingham-ticket");
-              if(!previousTrip) return;
-              var ticket = previousTrip.cloneNode(true);
-              ticket.id = "passages-birmingham-2026-ticket";
-              ticket.removeAttribute("hidden");
-              ticket.removeAttribute("data-passages-enter-birmingham");
-              ticket.querySelector(".docno").textContent = "Itinerary · 2026";
-              ticket.querySelector("h2").textContent = "Birmingham 2026";
-              ticket.querySelector("p").innerHTML = "BIRMINGHAM, ALABAMA<br>FLIGHTS · HOTEL · RENTAL";
-              ticket.querySelector(".passages-trip-open").textContent = "Open itinerary →";
-              ticket.addEventListener("click", function(){
-                window.open(birmingham2026Url, "_blank", "noopener");
-              });
-              previousTrip.insertAdjacentElement("afterend", ticket);
-              var issued = document.getElementById("passages-issued-count");
-              var charterCount = document.getElementById("passages-charter-count");
-              if(issued) issued.textContent = "3 issued";
-              if(charterCount) charterCount.textContent = "3 current trips";
-            }
-            addBirmingham2026Trip();
-            new MutationObserver(addBirmingham2026Trip).observe(document.body, {childList:true, subtree:true});
-          })();
           window.passagesSecureSignOut = function(){
             Object.keys(localStorage).forEach(function(key){
               if(key.indexOf("sb-") === 0 && key.indexOf("-auth-token") > -1) localStorage.removeItem(key);
