@@ -267,6 +267,10 @@
 
     function addSecureSessionControls(html, email) {
       const safeEmail = String(email || "Approved traveler").replace(/[&<>"']/g, "");
+      const isOwner = String(email || "").trim().toLowerCase() === "doug1mckee@gmail.com";
+      const birminghamTrip = isOwner
+        ? '<a href="https://birmingham-trip-2026.mckeed.chatgpt.site" target="_blank" rel="noopener">Birmingham 2026</a>'
+        : '';
       const cloudBoot = `
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
         <script>
@@ -282,13 +286,14 @@
         <style>
           #passages-secure-session{position:relative;z-index:auto;width:max-content;display:flex;align-items:center;gap:8px;margin:22px max(12px,env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) auto;padding:7px 8px 7px 12px;border:1px solid rgba(15,120,128,.28);border-radius:999px;background:rgba(255,250,240,.94);box-shadow:0 7px 24px rgba(11,37,64,.18);font:600 11px/1.2 Inter,system-ui,sans-serif;color:#47616c;backdrop-filter:blur(8px)}
           #passages-secure-session[hidden]{display:none!important}
-          #passages-secure-session button{border:0;border-radius:999px;padding:8px 11px;background:#0b2540;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;cursor:pointer}
+          #passages-secure-session button,#passages-secure-session a{border:0;border-radius:999px;padding:8px 11px;background:#0b2540;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
           @media(max-width:520px){
             #passages-secure-session span{display:none}
           }
         </style>
         <div id="passages-secure-session" aria-label="Private session controls">
           <span>Private · ${safeEmail}</span>
+          ${birminghamTrip}
           <button type="button" onclick="window.passagesSecureSignOut()">Sign out</button>
         </div>
         <script>
