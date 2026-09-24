@@ -297,6 +297,33 @@
           <button type="button" onclick="window.passagesSecureSignOut()">Sign out</button>
         </div>
         <script>
+          (function(){
+            var birmingham2026Url = "https://birmingham-trip-2026.mckeed.chatgpt.site";
+            function addBirmingham2026Trip(){
+              if(window.PASSAGES_USER_EMAIL !== "doug1mckee@gmail.com") return;
+              if(document.getElementById("passages-birmingham-2026-ticket")) return;
+              var previousTrip = document.getElementById("passages-birmingham-ticket");
+              if(!previousTrip) return;
+              var ticket = previousTrip.cloneNode(true);
+              ticket.id = "passages-birmingham-2026-ticket";
+              ticket.removeAttribute("hidden");
+              ticket.removeAttribute("data-passages-enter-birmingham");
+              ticket.querySelector(".docno").textContent = "Itinerary · 2026";
+              ticket.querySelector("h2").textContent = "Birmingham 2026";
+              ticket.querySelector("p").innerHTML = "BIRMINGHAM, ALABAMA<br>FLIGHTS · HOTEL · RENTAL";
+              ticket.querySelector(".passages-trip-open").textContent = "Open itinerary →";
+              ticket.addEventListener("click", function(){
+                window.open(birmingham2026Url, "_blank", "noopener");
+              });
+              previousTrip.insertAdjacentElement("afterend", ticket);
+              var issued = document.getElementById("passages-issued-count");
+              var charterCount = document.getElementById("passages-charter-count");
+              if(issued) issued.textContent = "3 issued";
+              if(charterCount) charterCount.textContent = "3 current trips";
+            }
+            addBirmingham2026Trip();
+            new MutationObserver(addBirmingham2026Trip).observe(document.body, {childList:true, subtree:true});
+          })();
           window.passagesSecureSignOut = function(){
             Object.keys(localStorage).forEach(function(key){
               if(key.indexOf("sb-") === 0 && key.indexOf("-auth-token") > -1) localStorage.removeItem(key);
